@@ -1,0 +1,267 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.frmAddLines..Create(BaseForm)
+Gui.frmAddLines..Caption("AR Terms")
+Gui.frmAddLines..Size(515,623)
+Gui.frmAddLines..MinX(0)
+Gui.frmAddLines..MinY(0)
+Gui.frmAddLines..Position(0,0)
+Gui.frmAddLines..AlwaysOnTop(False)
+Gui.frmAddLines..FontName("Tahoma")
+Gui.frmAddLines..FontSize(8.25)
+Gui.frmAddLines..ControlBox(True)
+Gui.frmAddLines..MaxButton(False)
+Gui.frmAddLines..MinButton(True)
+Gui.frmAddLines..MousePointer(0)
+Gui.frmAddLines..Moveable(True)
+Gui.frmAddLines..Sizeable(True)
+Gui.frmAddLines..ShowInTaskBar(True)
+Gui.frmAddLines..TitleBar(True)
+Gui.frmAddLines..Event(UnLoad,Unload)
+Gui.frmAddLines.GsGridlines.Create(GsGridControl)
+Gui.frmAddLines.GsGridlines.Enabled(True)
+Gui.frmAddLines.GsGridlines.Visible(True)
+Gui.frmAddLines.GsGridlines.Zorder(0)
+Gui.frmAddLines.GsGridlines.Size(485,529)
+Gui.frmAddLines.GsGridlines.Position(19,42)
+Gui.frmAddLines.GsGridlines.Event(CellValueChanged,GsGridlines_CellValueChanged)
+Gui.frmAddLines.cmdSave.Create(Button)
+Gui.frmAddLines.cmdSave.Enabled(True)
+Gui.frmAddLines.cmdSave.Visible(True)
+Gui.frmAddLines.cmdSave.Zorder(0)
+Gui.frmAddLines.cmdSave.Size(94,29)
+Gui.frmAddLines.cmdSave.Position(413,7)
+Gui.frmAddLines.cmdSave.Caption("Save")
+Gui.frmAddLines.cmdSave.FontName("Tahoma")
+Gui.frmAddLines.cmdSave.FontSize(7.8)
+Gui.frmAddLines.cmdSave.Event(Click,cmdSave_Click)
+Program.Sub.ScreenSU.End
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+V.Global.bSave.Declare
+V.Local.sSQL.Declare
+
+
+f.Intrinsic.Control.If(v.Caller.Switches,=,"M")
+	'Custom menu item - Product Grouping Codes
+	f.Intrinsic.Control.CallSub(Load_Grid)
+	'35700
+f.Intrinsic.Control.elseIf(v.Caller.Hook,=,15150)
+'f.Intrinsic.UI.Msgbox("1stif")
+'	f.Intrinsic.Control.If(v.Caller.User,=,"SUPERVSR")
+'		Function.Intrinsic.Debug.InvokeDebugger
+'		Function.Intrinsic.Debug.Stop
+'	f.Intrinsic.Control.EndIf
+
+	F.ODBC.Connection!con.OpenCompanyConnection(300)
+'	f.Intrinsic.String.Build("update INV_BATCH_CTRL set AR_ACCT = AR.Accot from v_order_header join v_AR_TERMS_DESCR T on Terms = Terms_message join GCG_6389_ARTerms AR on AR.Code = T.terms_code and  rtrim(AR.Accot) <> '' and order_no = '{0}' ",Variable.Passed.009001,V.Local.sSQL)
+'	V.Local.sSQL.Set("update AR_BATCH_TRANS set Acct = GCG_6389_ARTerms.Accot from AR_OPEN_ITEMS,GCG_6389_ARTerms where AR_OPEN_ITEMS.Terms_Code = GCG_6389_ARTerms.Code and INVC <> 'DEBIT' and invoice = INVC and cust = CUSTOMER ")
+'	F.ODBC.connection!con.Execute(V.Local.sSQL)
+	V.Local.sSQL.Set("update AR_BATCH_TRANS set Acct = GCG_6389_ARTerms.Accot from GCG_6389_ARTerms where AR_BATCH_TRANS.Terms_Code = GCG_6389_ARTerms.Code  ")
+	F.ODBC.connection!con.Execute(V.Local.sSQL)
+	F.ODBC.Connection!con.close
+	f.Intrinsic.Control.end
+'f.Intrinsic.Control.elseIf(v.Caller.Hook,=,29710)
+f.Intrinsic.Control.elseIf(v.Caller.Hook,=,16090)
+'PRE ProcessHOOK
+
+	f.Intrinsic.Control.If(v.Caller.User,=,"SUPERVSR")
+		Function.Intrinsic.Debug.InvokeDebugger
+		Function.Intrinsic.Debug.Stop
+	f.Intrinsic.Control.EndIf
+	
+	
+	f.Intrinsic.Control.If(Variable.passed.bip_terminal,=,v.Caller.Terminal)
+	f.Intrinsic.Control.andIf(Variable.passed.bip_rptid,=,"000572")
+		F.ODBC.Connection!con.OpenCompanyConnection(300)
+	
+	'	V.Local.sSQL.Set("update AR_BATCH_TRANS set Acct = Accot  from v_order_header , v_AR_TERMS_DESCR T,GCG_6389_ARTerms AR  where Terms = Terms_message and order_Num = order_no and AR_BATCH_TRANS.Terms_Code <> '' and AR.Code = AR_BATCH_TRANS.terms_code and  rtrim(AR.Accot) <> '' ")
+	
+		V.Local.sSQL.Set("update AR_BATCH_TRANS set Acct = GCG_6389_ARTerms.Accot from AR_OPEN_ITEMS,GCG_6389_ARTerms where AR_BATCH_TRANS.Terms_Code = GCG_6389_ARTerms.Code and INVC <> 'DEBIT' and invoice = INVC and cust = CUSTOMER ")
+		F.ODBC.connection!con.Execute(V.Local.sSQL)
+	'	V.Local.sSQL.Set("update AR_OPEN_ITEMS set GL_Account = GCG_6389_ARTerms.Accot from AR_BATCH_TRANS,GCG_6389_ARTerms  where AR_OPEN_ITEMS.Terms_Code = GCG_6389_ARTerms.Code and INVC <> 'DEBIT' and invoice = INVC and cust = CUSTOMER ")
+	'	F.ODBC.connection!con.Execute(V.Local.sSQL)
+	
+		F.ODBC.Connection!con.close
+	f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.end
+f.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Load_Grid.Start
+f.Intrinsic.Control.Try
+
+
+V.Local.sSQL.Declare(String)
+V.Local.sType.Declare(String)
+v.Local.iTotClmn.Declare 
+v.Local.i.Declare
+v.Local.stitle.Declare
+'v.Local.sOrderNo.Declare
+'v.Local.sOrderLn.Declare
+v.local.iret.Declare 
+v.Local.sACCT.Declare
+
+F.ODBC.Connection!con.OpenCompanyConnection(300)
+
+f.Intrinsic.Control.CallSub(Check_Table)
+
+V.Local.sSQL.Set("select Terms_code as code1,Terms_message,Accot as Account  from v_AR_TERMS_DESCR left join GCG_6389_ARTerms on terms_code = code ")
+'V.Local.sSQL.Set("select terms_code as code,Terms_message  from v_AR_TERMS_DESCR  ")
+F.Intrinsic.Control.If(v.DataTable.DTLines.Exists,=,True)
+	F.Data.DataTable.Close("DTLines")
+f.Intrinsic.Control.EndIf 
+F.Data.DataTable.CreateFromSQL("DTLines","con",v.Local.sSQL,True)
+
+	F.Data.DataView.Create("DTLines","DVLines")
+	
+	
+'	F.Data.Dictionary.CreateFromSql("dtXdic","con","select code,Acct as Account  from GCG_6389_ARTerms")
+'	f.Data.Dictionary.SetDefaultReturn("dtXdic","")
+'	f.Data.DataTable.FillFromDictionary("DTLines","dtXdic","code","code")
+'	f.Data.Dictionary.Close("dtXdic")
+
+	gui.frmAddLines.GsGridLines.SuspendLayout 
+'Function.Intrinsic.Debug.InvokeDebugger
+'Function.Intrinsic.Debug.Stop
+
+	gui.frmAddLines.GsGridLines.AddGridViewFromDataView("GridView","DTLines","DVLines")
+
+	gui.frmAddLines.GsGridLines.GetColumnCount("GridView",v.Local.iTotClmn)
+	f.Intrinsic.Math.Sub(v.Local.iTotClmn,1,v.Local.iTotClmn)
+	f.Intrinsic.Control.For(v.Local.i,0,v.Local.iTotClmn,1)
+		gui.frmAddLines.GsGridLines.GetColumnNamebyIndex("GridView",v.Local.i,v.Local.stitle)
+		gui.frmAddLines.GsGridLines.SetColumnProperty("GridView",v.Local.stitle,"AllowEdit",False)
+		gui.frmAddLines.GsGridLines.SetColumnProperty("GridView",v.Local.stitle,"ReadOnly",True)
+
+		gui.frmAddLines.GsGridLines.SetColumnProperty("GridView",v.Local.stitle,"HeaderFontBold","True")
+		gui.frmAddLines.GsGridLines.SetColumnProperty("GridView",v.Local.stitle,"HeaderBackColor","#7FFF00")
+		gui.frmAddLines.GsGridLines.SetColumnProperty("GridView",v.Local.stitle,"HeaderHAlignment","Center")
+	f.Intrinsic.Control.Next(v.Local.i)
+
+	gui.frmAddLines.GsGridLines.SetGridViewProperty("GridView", "ColumnPanelRowHeight", "40")
+	Gui.frmAddLines.GsGridLines.SetGridviewProperty("GridView","OptionsViewRowAutoHeight",True)
+
+	
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","code1","MinWidth",80)
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","code1","MaxWidth",80)
+'	
+
+''	
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","Account","MinWidth",70)
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","Account","MaxWidth",70)
+	
+
+'	
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","code1","Caption","Terms Code")
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","Terms_message","Caption","Terms Message")
+
+
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","Account","AllowEdit",True)
+	gui.frmAddLines.GsGridLines.SetColumnProperty("GridView","Account","ReadOnly",False)
+
+	F.Data.DataTable.CreateFromSQL("DTACCT","con","select rtrim(gl_Account) as gl_Account from v_GL_MASTER order by 1 ")
+	f.Data.Dataview.Create("DTACCT","DTACCTView",22)
+	f.data.DataView.ToString("DTACCT","DTACCTView","gl_Account","@!@","*!*",v.Local.sACCT)
+	f.Intrinsic.String.Build("{0}*!*{1}"," ",v.Local.sACCT,v.Local.sACCT)
+	f.Data.DataView.Close("DTACCT","DTACCTView")
+	f.Data.DataTable.Close("DTACCT")
+
+
+	gui.frmAddLines.GsGridLines.ColumnEdit("GridView","Account","Dropdownlist",v.Local.sACCT)
+
+	gui.frmAddLines.GsGridLines.SetGridViewProperty("GridView", "OptionsSelectionEnableAppearanceFocusedRow", "False") 
+
+	gui.frmAddLines.GsGridLines.ResumeLayout 
+
+	gui.frmAddLines.GsGridLines.MainView("GridView")
+
+	gui.frmAddLines.GsGridLines.Anchor(15)
+	gui.frmAddLines.cmdSave.Anchor(10)
+	gui.frmAddLines..Show 
+
+
+f.Intrinsic.Control.Catch
+	f.Intrinsic.Control.CallSub(ErrorMsg, CurrentSub, v.Ambient.CurrentSubroutine)
+	f.Intrinsic.Control.EndTry
+
+
+Program.Sub.Load_Grid.End
+
+Program.Sub.cmdSave_Click.Start
+f.Intrinsic.Control.Try
+
+	F.Intrinsic.Control.If(V.DataView.DTLines!DVSave.Exists,=,True)
+		Function.Data.DataView.Close("DTLines","DVSave")
+	f.Intrinsic.Control.EndIf 
+	
+	f.Data.DataView.Create("DTLines","DVSave",22,"","")
+	
+	f.Data.DataView.ToDataTable("DTLines","DVSave","DTSave")
+	F.Data.DataTable.SaveToDB("DTSave","con","GCG_6389_ARTerms","code1",256,"code1@!@code*!*Account@!@Accot")
+	f.Data.Datatable.Close("DTSave")
+	V.Global.bSave.Set(False)
+f.Intrinsic.Control.Catch
+	F.Intrinsic.UI.CloseWaitDialog
+	f.Intrinsic.Control.CallSub(ErrorMsg, CurrentSub, v.Ambient.CurrentSubroutine)
+	f.Intrinsic.Control.EndTry	
+Program.Sub.cmdSave_Click.End
+Program.Sub.Unload.Start
+f.Intrinsic.Control.Try
+F.Intrinsic.UI.CloseWaitDialog
+
+variable.local.returnvalue.Declare(String)
+
+F.Intrinsic.Control.If(V.Global.bSave,=,True)
+	Function.Intrinsic.UI.MsgBox("Changes not saved, Do you want to save the changes ?", "Confirm", 4, variable.local.returnvalue)
+	F.Intrinsic.Control.If(variable.local.returnvalue,=,6)
+		f.Intrinsic.Control.CallSub(cmdSave_Click)
+	f.Intrinsic.Control.EndIf 
+f.Intrinsic.Control.EndIf 
+
+F.Intrinsic.Control.If(V.ODBC.con.State,=,1)
+	F.ODBC.Connection!con.close
+F.Intrinsic.Control.EndIf
+	
+f.Intrinsic.Control.End
+
+f.Intrinsic.Control.Catch
+		f.Intrinsic.Control.End
+	f.Intrinsic.Control.EndTry
+Program.Sub.Unload.End
+Program.Sub.Check_Table.Start
+f.Intrinsic.Control.Try
+
+V.Local.bExists.Declare
+V.Local.sSQL.Declare
+
+F.ODBC.Connection!con.TableExists("GCG_6389_ARTerms",V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists,=,False)
+	V.Local.sSQL.Set("CREATE TABLE GCG_6389_ARTerms(Code VARCHAR(1) NOT NULL,Accot VARCHAR(15));")
+	F.ODBC.Connection!con.Execute(V.Local.sSQL)
+f.Intrinsic.Control.EndIf
+
+f.Intrinsic.Control.Catch
+	f.Intrinsic.Control.CallSub(ErrorMsg, CurrentSub, v.Ambient.CurrentSubroutine)
+	f.Intrinsic.Control.EndTry
+Program.Sub.Check_Table.End
+
+Program.Sub.ErrorMsg.Start
+v.Local.sError.Declare
+
+f.Intrinsic.String.Build("Project GCG_6389_ARTerms.g2u {0}{0}Subroutine: {1}{0}Error: {2} with Description: {3}", v.Ambient.NewLine, v.Args.CurrentSub, v.Ambient.ErrorNumber, v.Ambient.ErrorDescription, v.Local.sError)
+f.Intrinsic.UI.Msgbox(v.Local.sError)
+
+Program.Sub.ErrorMsg.End
+Program.Sub.GsGridlines_CellValueChanged.Start
+	V.Global.bSave.Set(True)
+Program.Sub.GsGridlines_CellValueChanged.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$rnair$}$20220228130813435$}$JUGEdtlNdgRUPvge2DQ26cJ2Nib0UUk8qaiM9ei5xlWi64h6eT79z6sPv/33emqx0APzNgNc9Ko=
+Program.Sub.Comments.End
