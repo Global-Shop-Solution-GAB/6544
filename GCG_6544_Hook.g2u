@@ -1,0 +1,123 @@
+﻿Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+v.Local.sRet.Declare
+v.Local.sCust.Declare
+v.Local.sSO.Declare
+v.Local.sSQL.Declare
+v.Local.sOrder.Declare
+v.Local.sTerm.Declare
+v.Local.sType.Declare
+v.Local.sParams.Declare
+'Populate
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+
+f.Intrinsic.Control.If(v.Caller.Hook, =, 11560)
+	Variable.Passed.000203.Set("SO Type")
+f.Intrinsic.Control.EndIf
+'Script 3
+f.Intrinsic.Control.If(v.Caller.Hook, =, 11930)
+	v.Local.sCust.Set(Variable.Passed.000006)
+	'Set Variables
+	f.ODBC.Connection!con.OpenCompanyConnection
+	 	f.Intrinsic.String.Build("Select 'Service/Parts' as Type, Service_Order as Term from GCG_6544_CUST_TERMS where Customer = '{0}' Union Select 'Warranty' as Type,  Warranty as Term from GCG_6544_CUST_TERMS where Customer = '{0}'", v.Local.sCust, v.Local.sSQL)
+	 	f.Intrinsic.UI.Browser("Terms", "con", v.Local.sSQL, "Type*!*Terms", "80*!*80", v.Local.sRet)
+	f.ODBC.Connection!con.Close
+	'Check Return
+	f.Intrinsic.Control.If(v.Local.sRet.Trim, =, "***CANCEL***")
+		f.Intrinsic.Control.End
+	f.Intrinsic.Control.EndIf
+	f.Intrinsic.String.Split(v.Local.sRet, "*!*", v.Local.sRet)
+	'Set Types and Terms
+	Variable.Passed.000045.Set(v.Local.sRet(0))
+	f.ODBC.Connection!con.OpenCompanyConnection
+		f.Intrinsic.String.Build("Select top 1 Terms_Message from V_AR_TERMS where Terms_code = '{0}'", v.Local.sRet(1), v.Local.sSQL)
+		f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSQL, v.Local.sTerm)
+	f.ODBC.Connection!con.Close
+	Variable.Passed.000029.Set(v.Local.sTerm)
+
+	
+	'Set cariables
+	f.Intrinsic.String.LPad(Variable.Passed.000003, "0", 7, v.Local.sSO)
+	v.Local.sOrder.Set(Variable.Passed.000045)
+	v.Local.sCust.Set(Variable.Passed.000006)
+	f.ODBC.Connection!con.OpenCompanyConnection
+		f.Intrinsic.Control.If(v.Local.sOrder.Trim, =, "Service/Parts")
+			v.Local.sType.Set("Service_Order")
+		f.Intrinsic.Control.ElseIf(v.Local.sOrder.Trim, =, "Warranty")
+			v.Local.sType.Set("Warranty")
+		f.Intrinsic.Control.Else
+			f.ODBC.Connection!con.Close
+			f.Intrinsic.Control.End
+			v.Local.sType.Set("Regular")
+		f.Intrinsic.Control.EndIf
+		f.Intrinsic.String.Build("Select top 1 {1} from GCG_6544_CUST_TERMS where Customer = '{0}'", v.Local.sCust, v.Local.sType, v.Local.sSQL)
+		f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSQL, v.Local.sTerm)
+		
+		'f.Intrinsic.Control.If(v.Local.sTerm.Trim, =, "")
+			
+		'f.Intrinsic.Control.EndIf
+		
+		f.Intrinsic.String.Build("Select top 1 Terms_Message from V_AR_TERMS where Terms_code = '{0}'", v.Local.sTerm, v.Local.sSQL)
+		f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSQL, v.Local.sTerm)
+		'f.Intrinsic.UI.ChangeCallerProperty(v.Passed.000029, "Lock", 0)
+		v.Passed.000029.Set(v.Local.sTerm)
+		'f.Intrinsic.UI.ChangeCallerProperty(v.Passed.000029, "Lock", 1)
+		f.Intrinsic.String.Build("Update Order_header Set User_3 = '{0}', Terms = '{1}' Where Order_no = '{2}' and Record_No = '  A'", v.Local.sOrder, v.Local.sTerm, v.Local.sSO, v.Local.sSQL)
+		f.ODBC.Connection!con.Execute(v.Local.sSQL)
+		
+		f.Intrinsic.String.Build("Update Order_lines Set User_3 = '{0}' Where Order_no = '{1}' and Record_Type = 'L'", v.Local.sOrder, v.Local.sSO, v.Local.sSQL)
+		f.ODBC.Connection!con.Execute(v.Local.sSQL)
+	f.ODBC.Connection!con.Close
+f.Intrinsic.Control.EndIf
+'post Save
+f.Intrinsic.Control.If(v.Caller.Hook, =, 11872)
+	'Set cariables
+	f.Intrinsic.String.LPad(Variable.Passed.000003, "0", 7, v.Local.sSO)
+	v.Local.sOrder.Set(Variable.Passed.000045)
+	v.Local.sCust.Set(Variable.Passed.000006)
+	f.ODBC.Connection!con.OpenCompanyConnection
+		f.Intrinsic.Control.If(v.Local.sOrder.Trim, =, "Service/Parts")
+			v.Local.sType.Set("Service_Order")
+		f.Intrinsic.Control.ElseIf(v.Local.sOrder.Trim, =, "Warranty")
+			v.Local.sType.Set("Warranty")
+		f.Intrinsic.Control.Else
+			f.ODBC.Connection!con.Close
+			f.Intrinsic.Control.End
+			v.Local.sType.Set("Regular")
+		f.Intrinsic.Control.EndIf
+		f.Intrinsic.String.Build("Select top 1 {1} from GCG_6544_CUST_TERMS where Customer = '{0}'", v.Local.sCust, v.Local.sType, v.Local.sSQL)
+		f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSQL, v.Local.sTerm)
+		
+		'f.Intrinsic.Control.If(v.Local.sTerm.Trim, =, "")
+			
+		'f.Intrinsic.Control.EndIf
+		
+		f.Intrinsic.String.Build("Select top 1 Terms_Message from V_AR_TERMS where Terms_code = '{0}'", v.Local.sTerm, v.Local.sSQL)
+		f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sSQL, v.Local.sTerm)
+		
+		f.Intrinsic.String.Build("Update Order_header Set User_3 = '{0}', Terms = '{1}' Where Order_no = '{2}' and Record_No = '  A'", v.Local.sOrder, v.Local.sTerm, v.Local.sSO, v.Local.sSQL)
+		f.ODBC.Connection!con.Execute(v.Local.sSQL)
+		
+		f.Intrinsic.String.Build("Update Order_lines Set User_3 = '{0}' Where Order_no = '{1}' and Record_Type = 'L'", v.Local.sOrder, v.Local.sSO, v.Local.sSQL)
+		f.ODBC.Connection!con.Execute(v.Local.sSQL)
+	f.ODBC.Connection!con.Close
+	
+	f.Intrinsic.Control.If(v.Caller.CompanyCode, <>, "TST")
+		f.Intrinsic.Control.End
+	f.Intrinsic.Control.EndIf
+	'Check if Order is empty, if not re open
+	f.Intrinsic.Control.If(v.Caller.Switches, =, "N")
+		f.Intrinsic.Control.If(v.Local.sOrder.Trim, <>, "")
+			f.Intrinsic.String.Build("{0}!*!O!*!{1}", v.Local.sSO, v.Local.sCust, v.Local.sParams)
+			f.Global.General.CallwrapperAsync(200000, v.Local.sParams)
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$aanazco$}$20220405212417857$}$7aQAV3Tor/tR9bkuakHbuzQlHVuXCGOz5x4kUt/VE2Q8eWIJCh0L8D9fp84I+56yLcvHqrGJw8E=
+Program.Sub.Comments.End
