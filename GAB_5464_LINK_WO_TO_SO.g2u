@@ -1,0 +1,118 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.frmSOWO..Create
+Gui.frmSOWO..Caption("Link SO to WO")
+Gui.frmSOWO..Size(9555,1515)
+Gui.frmSOWO..MinX(0)
+Gui.frmSOWO..MinY(0)
+Gui.frmSOWO..Position(0,0)
+Gui.frmSOWO..BackColor(-2147483633)
+Gui.frmSOWO..MousePointer(0)
+Gui.frmSOWO..Event(UnLoad,frmSOWO_UnLoad)
+Gui.frmSOWO.txtSO.Create(TextBox,"",True,2550,300,0,120,330,False,0,"Arial",8,-2147483643,1)
+Gui.frmSOWO.cmdSO.Create(Button)
+Gui.frmSOWO.cmdSO.Size(855,375)
+Gui.frmSOWO.cmdSO.Position(2730,300)
+Gui.frmSOWO.cmdSO.Caption("^")
+Gui.frmSOWO.cmdSO.Event(Click,cmdSO_Click)
+Gui.frmSOWO.txtWO.Create(TextBox,"",True,2550,300,0,3990,330,False,0,"Arial",8,-2147483643,1)
+Gui.frmSOWO.cmdWO.Create(Button)
+Gui.frmSOWO.cmdWO.Size(855,375)
+Gui.frmSOWO.cmdWO.Position(6615,300)
+Gui.frmSOWO.cmdWO.Caption("^")
+Gui.frmSOWO.cmdWO.Event(Click,cmdWO_Click)
+Gui.frmSOWO.cmdProcess.Create(Button)
+Gui.frmSOWO.cmdProcess.Size(1425,375)
+Gui.frmSOWO.cmdProcess.Position(7845,300)
+Gui.frmSOWO.cmdProcess.Caption("Process")
+Gui.frmSOWO.cmdProcess.Event(Click,cmdProcess_Click)
+Gui.frmSOWO.lbl1.Create(Label,"Sales Order",True,1935,255,0,135,105,True,0,"Arial",8,-2147483633,0)
+Gui.frmSOWO.lbl2.Create(Label,"Work Order",True,1935,255,0,4005,105,True,0,"Arial",8,-2147483633,0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+f.ODBC.Connection!con.openconnection(v.Ambient.PDSN,v.ambient.PUser,v.Ambient.PPass)
+f.Intrinsic.UI.SetBrowserHotTypeAhead(true)
+gui.frmSOWO..Show
+Program.Sub.Main.End
+
+Program.Sub.cmdProcess_Click.Start
+f.Intrinsic.Control.Try
+	v.Local.sDELT.Declare(string,"DELETE FROM ORDER_TO_WO WHERE JOB='{0}' AND SUFFIX='{1}' AND ORDER_NO='{2}' AND ORDER_LINE='{3}'")
+	v.Local.sSQL1.Declare(String,"INSERT INTO ORDER_TO_WO (JOB, SUFFIX, ORDER_NO, ORDER_LINE) VALUES ('{0}','{1}','{2}','{3}')")
+	v.Local.sSQL2.Declare(String,"UPDATE ORDER_LINES SET FLAG_SO_TO_WO='Y' WHERE ORDER_NO='{0}' AND RECORD_NO='{1}' AND RECORD_TYPE='L'")
+	v.Local.sSQL3.Declare(String,"UPDATE JOB_HEADER SET SALES_ORDER='{0}', SALES_ORDER_LINE='{1}' WHERE JOB='{2}' AND SUFFIX='{3}'")
+	v.Local.sJSp.Declare
+	v.Local.sOSp.Declare
+	v.Local.sJob.Declare
+	v.Local.sSuf.Declare
+	v.Local.sSOH.Declare
+	v.Local.sRec.Declare
+	f.Intrinsic.String.Split(v.Screen.frmSOWO!txtSO.text,"-",v.Local.sOSp)
+	f.Intrinsic.String.Split(v.Screen.frmSOWO!txtWO.text,"-",v.Local.sJSp)
+	v.Local.sJob.Set(v.Local.sJSp(0))
+	v.Local.sSuf.Set(v.Local.sJSp(1))
+	v.Local.sSOH.Set(v.Local.sOSp(0))
+	v.Local.sRec.Set(v.Local.sOSp(1))
+	f.Intrinsic.String.Build(v.Local.sDELT,v.Local.sJob,v.Local.sSuf,v.Local.sSOH,v.Local.sRec,v.Local.sDELT)
+	f.Intrinsic.String.Build(v.Local.sSQL1,v.Local.sJob,v.Local.sSuf,v.Local.sSOH,v.Local.sRec,v.Local.sSQL1)
+	f.Intrinsic.String.Build(v.Local.sSQL2,v.Local.sSOH,v.Local.sRec,v.Local.sSQL2)
+	f.Intrinsic.String.Build(v.Local.sSQL3,v.Local.sSOH,v.Local.sRec,v.Local.sJob,v.Local.sSuf,v.Local.sSQL3)
+	f.ODBC.Connection!con.execute(v.Local.sDELT)
+	f.ODBC.Connection!con.execute(v.Local.sSQL1)
+	f.ODBC.Connection!con.execute(v.Local.sSQL2)
+	f.ODBC.Connection!con.execute(v.Local.sSQL3)
+	gui.frmSOWO.txtSO.Text("")
+	gui.frmSOWO.txtWO.Text("")
+f.Intrinsic.Control.Catch
+	f.Intrinsic.UI.Msgbox(v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdProcess_Click.End
+
+Program.Sub.frmSOWO_UnLoad.Start
+f.ODBC.Connection!con.Close
+f.Intrinsic.Control.End
+Program.Sub.frmSOWO_UnLoad.End
+
+Program.Sub.cmdWO_Click.Start
+V.Local.sCol.Declare(String)
+V.Local.sColW.Declare(String)
+V.Local.sRet.Declare(String)
+v.Local.sWO.Declare(string)
+V.Local.sSQL.Declare(string,"SELECT JOB, SUFFIX,  rtrim(IF(INV_LXR.DISPLAY_PART is null, SUBSTRING(v_JOB_HEADER.PART, 1, 17), INV_LXR.DISPLAY_PART)) AS 'PartNumb', PART_DESCRIPTION FROM V_JOB_HEADER left join INV_LXR ON V_JOB_HEADER.PART= INV_LXR.GSS_PART")
+'Split Column Names into an array (*!* delimited string)
+F.Intrinsic.String.Split("Job*!*Suffix*!*Part*!*Description","*!*",V.Local.sCol)
+'Split Column widths into an array (*!* delimited string)
+F.Intrinsic.String.Split("500*!*500*!*2000*!*2000","*!*",V.Local.sColW)
+F.Intrinsic.UI.Browser("Select a Job","con",V.Local.sSQL,V.Local.sCol,V.Local.sColW,V.Local.sRet)
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+	f.Intrinsic.String.Concat(v.Local.sRet(0),"-",v.Local.sRet(1),V.Local.sWO)	
+	gui.frmSOWO.txtWO.Text(v.Local.sWO)
+F.Intrinsic.Control.EndIf
+Program.Sub.cmdWO_Click.End
+
+Program.Sub.cmdSO_Click.Start
+V.Local.sCol.Declare(String)
+V.Local.sColW.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.sSO.Declare(String)
+V.Local.sSQL.Declare(String,"SELECT ORDER_NO, RECORD_NO, rtrim(IF(INV_LXR.DISPLAY_PART is null, SUBSTRING(V_ORDER_LINES.PART, 1, 17), INV_LXR.DISPLAY_PART)) AS 'PartNumb', DESCRIPTION FROM V_ORDER_LINES left join INV_LXR ON V_ORDER_LINES.PART= INV_LXR.GSS_PART")
+'Split Column Names into an array (*!* delimited string)
+F.Intrinsic.String.Split("Order*!*Line*!*Part*!*Description","*!*",V.Local.sCol)
+'Split Column widths into an array (*!* delimited string)
+F.Intrinsic.String.Split("500*!*500*!*2000*!*2000","*!*",V.Local.sColW)
+F.Intrinsic.UI.Browser("Select a Order","con",V.Local.sSQL,V.Local.sCol,V.Local.sColW,V.Local.sRet)
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+	f.Intrinsic.String.Concat(v.Local.sRet(0),"-",v.Local.sRet(1),v.Local.sSO)	
+	gui.frmSOWO.txtSO.Text(v.Local.sSO)
+F.Intrinsic.Control.EndIf
+Program.Sub.cmdSO_Click.End
+
+Program.Sub.Comments.Start
+${$5$}$2.0.0.0$}$2
+${$6$}$aanazco$}$20220211111950217$}$7aQAV3Tor/tR9bkuakHbuzQlHVuXCGOzRi0nYnd7jNYOXcx5ZIoepLrUkz16lf5RN/dYVUEKct8=
+Program.Sub.Comments.End
