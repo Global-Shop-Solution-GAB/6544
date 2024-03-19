@@ -1,0 +1,78 @@
+﻿Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+v.Local.sRet.Declare
+v.Local.sSQL.Declare
+v.Local.sCust.Declare
+v.Local.sSO.Declare
+v.Local.sType.Declare
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+f.Intrinsic.Control.Try
+'Populate Hook 
+	f.Intrinsic.Control.If(v.Caller.Hook, =, 11900)
+		v.Passed.000203.Set("Terms")
+	f.Intrinsic.Control.EndIf
+'Script Hook
+	f.Intrinsic.Control.If(v.Caller.Hook, =, )
+		v.Local.sCust.Set(v.Passed.000006)
+		f.Intrinsic.UI.BrowserFromString("Terms", "Regular*!*Service*!*Warranty", "$!$", "*!*", "Type", "80", v.Local.sRet)
+		f.Intrinsic.Control.If(v.Local.sRet.Trim, =, "Regular")
+			f.ODBC.Connection!con.OpenCompanyConnection
+				f.Intrinsic.String.Build("Select top 1 Payment_Terms from V_CUSTOMER_SALES where Customer = '{0}'", v.Local.sCust, v.Local.sSQL)
+				f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sCust, v.Local.sRet)
+				f.Intrinsic.String.Build("Select top 1 Terms_Message from V_AR_TERMS_DESCR where terms_code = '{0}'", v.Local.sRet)
+				f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sCust, v.Local.sRet)
+			f.ODBC.Connection!con.Close
+			'Set Terms to screen
+			'Set Code Sort to Screen
+		f.Intrinsic.Control.EndIf
+		'Service
+		f.Intrinsic.Control.If(v.Local.sRet.Trim, =, "Service")
+			f.ODBC.Connection!con.OpenCompanyConnection
+				f.Intrinsic.String.Build("Select top 1 Service_Order from GCG_6544_CUST_TERMS where Customer = '{0}'", v.Local.sCust, v.Local.sSQL)
+				f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sCust, v.Local.sRet)
+			f.ODBC.Connection!con.Close
+			'Set Terms to screen
+			'Set Code Sort to Screen
+		f.Intrinsic.Control.EndIf
+		'Warranty
+		f.Intrinsic.Control.If(v.Local.sRet.Trim, =, "Warranty")
+			f.ODBC.Connection!con.OpenCompanyConnection
+				f.Intrinsic.String.Build("Select top 1 Warranty from GCG_6544_CUST_TERMS where Customer = '{0}'", v.Local.sCust, v.Local.sSQL)
+				f.ODBC.Connection!con.ExecuteAndReturn(v.Local.sCust, v.Local.sRet)
+			f.ODBC.Connection!con.Close
+			'Set Terms to screen
+			'Set Code Sort to Screen
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndIf
+'Post Save Hook
+	f.Intrinsic.Control.If(v.Caller.Hook, =, )
+		v.Local.sType.Set(v.Passed.000045)
+		v.Local.sSO.Set(v.Passed.000003)
+		f.Intrinsic.String.LPad(v.Local.sSO, "0", 7, v.Local.sSO)
+		f.ODBC.Connection!con.OpenCompanyConnection
+			f.Intrinsic.String.Build("Update Order_Header Set User_3 = '{0}' Where Order_no = '{1}' and Record_No = '  A'", v.Local.sType, v.Local.sSO, v.Local.sSQL) 
+			f.ODBC.Connection!con.Execute(v.Local.sSQL)
+			f.Intrinsic.String.Build("Update ORDER_LINES Set User_3 = '{0}' Where Order_no = '{1}' and Record_No not in ('  A', '  B', '  C')", v.Local.sType, v.Local.sSO, v.Local.sSQL) 
+			f.ODBC.Connection!con.Execute(v.Local.sSQL)
+		f.ODBC.Connection!con.Close
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.Catch
+	f.Intrinsic.Control.CallSub(ErrorMsg, CurrentSub, v.Ambient.CurrentSubroutine)
+f.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.ErrorMsg.Start
+v.Local.sError.Declare
+
+
+'Generic Error message.
+f.Intrinsic.String.Build("Project ProjectName.g2u {0}{0}Subroutine: {1}{0}Error: {2} with Description: {3}", v.Ambient.NewLine, v.Args.CurrentSub, v.Ambient.ErrorNumber, v.Ambient.ErrorDescription, v.Local.sError)
+f.Intrinsic.UI.Msgbox(v.Local.sError)
+Program.Sub.ErrorMsg.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$aanazco$}$20211230191135875$}$7aQAV3Tor/tR9bkuakHbuzQlHVuXCGOzWmgyCV8UX8jhFYYb9YXOxWNseV19ooOQhd1KoxNA7To=
+Program.Sub.Comments.End
